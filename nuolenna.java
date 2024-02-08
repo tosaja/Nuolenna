@@ -1,6 +1,7 @@
 /*
     nuolenna.java converts transliterated cuneiform text into cuneiform
     Copyright (C) 2018 Tommi Jauhiainen
+	Copyright (C) 2024 University of Helsinki
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
@@ -14,6 +15,10 @@
 
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ 
+	If you use this program or the signlist in scientific work resulting tp
+	publication, please use reference to the article they were first made
+	for: https://aclanthology.org/W19-1409/
 */
 
 import java.util.*;
@@ -103,6 +108,7 @@ class nuolenna {
 							sana = sana.replaceAll("(.*[^\\|\\&])(\\([^\\(\\)]*\\))(.*)","$1$3");
 						}
 					}
+
 // combination characters are inside pipes, but they are indicated also by combining markers, so we check markers and remove pipes
 					sana = sana.replaceAll("\\|", "");
 // Logograms separated internally by dots (e.g., GIR₂.TAB). If they are inside (...) they are not removed yet.
@@ -122,7 +128,7 @@ class nuolenna {
 
 					String[] tavut = sana.split(" ");
 					for (String tavu : tavut) {
-
+						
 // After the characters @ and ~ there is some annotation which should no affect cuneifying, so we just remove it.
 						if (tavu.matches(".*@[19cghknrstvz]")) {
 							tavu = tavu.replaceAll("@.*", "");
@@ -140,6 +146,7 @@ class nuolenna {
 						}
 						
 						tavu = tavu.replaceAll("[\\(\\)]", "");
+
 						if (cuneiMap.containsKey(tavu)) {
 							System.out.print(cuneiMap.get(tavu));
 						}
@@ -152,8 +159,11 @@ class nuolenna {
 								}
 							}
 						}
-						else if (tavu.equals("€")) {
+						else if (tavu.equals("€") || tavu.equals("o")) {
 							System.out.print("  ");
+						}
+						else {
+//							System.out.print(tavu);
 						}
 					}
 				}
