@@ -33,7 +33,7 @@ class nuolenna {
 	public static void main(String[] args) {
 		
 		File file = new File("sign_list.txt");
-		
+				
 		loadindictionary(file);
 
 		File file2 = new File(args[0]);
@@ -47,10 +47,10 @@ class nuolenna {
 			reader = new BufferedReader(new FileReader(file));
 			
 			String line = "";
-			
 			while ((line = reader.readLine()) != null) {
 // Logograms are written in capitals, but the signs are the same
 				line = line.toLowerCase();
+				
 				
 				String[] sanat = line.split(" ");
 				for (String sana : sanat) {
@@ -60,11 +60,15 @@ class nuolenna {
 						merkki = merkki.replaceAll("\\)$", "");
 						int maara = Integer.valueOf(sana.replaceAll("\\(.*$", ""));
 						sana = merkki;
+						if (maara > 10) {
+							maara = 10;
+						}
 						while (maara > 1) {
 							sana = sana + " " + merkki;
 							maara = maara - 1;
 						}
 					}
+										
 // $-sign means that the reading is uncertain (the sign is still certain) so we just remove all dollar signs
 					sana = sana.replaceAll("[\\$]", "");
 // some complicated combination characters have their own sign in UTF, transformations here before removing pipes
@@ -84,6 +88,8 @@ class nuolenna {
 							sana = sana.replaceAll("(.*ₓ\\()([^\\)]*)(\\))(.*)", "$2$4");
 						}
 					}
+					
+					
 // old or more precise readings can be within parenthesis straight after the sign. We just remove the parenthesis and what is inside them
 // first we handle "xxx(|...|)"
 					if (sana.matches(".*[^\\|\\&]\\(\\|[^\\|]*\\|\\).*")) {
@@ -91,23 +97,28 @@ class nuolenna {
 							sana = sana.replaceAll("(.*[^\\|\\&])(\\(\\|[^\\|]*\\|\\))(.*)", "$1$3");
 						}
 					}
+										
 // then we handle "|...|(...)"
 					if (sana.matches(".*\\|[^\\|]*\\|\\(.*\\).*")) {
 						while (sana.matches(".*\\|[^\\|]*\\|\\(.*\\).*")) {
 							sana = sana.replaceAll("(.*\\|[^\\|]*\\|)(\\(.*\\))(.*)", "$1$3");
 						}
 					}
+										
 // then we remove the more general case
 					if (sana.matches(".*[\\.-][^\\.-]*[^\\|\\&]\\(.*\\).*")) {
 						while (sana.matches(".*[\\.-][^\\.-]*[^\\|\\&]\\(.*\\).*")) {
 							sana = sana.replaceAll("(.*[\\.-][^\\.-]*[^\\|\\&])(\\(.*\\))(.*)", "$1$3");
 						}
 					}
+					
 					if (sana.matches(".*[^\\|\\&]\\(.*\\).*")) {
 						while (sana.matches(".*[^\\|\\&]\\([^\\(\\)]*\\).*")) {
 							sana = sana.replaceAll("(.*[^\\|\\&])(\\([^\\(\\)]*\\))(.*)","$1$3");
 						}
 					}
+					
+					
 
 // combination characters are inside pipes, but they are indicated also by combining markers, so we check markers and remove pipes
 					sana = sana.replaceAll("\\|", "");
@@ -128,43 +139,51 @@ class nuolenna {
 
 					String[] tavut = sana.split(" ");
 					for (String tavu : tavut) {
-						
-// After the characters @ and ~ there is some annotation which should no affect cuneifying, so we just remove it.
-						if (tavu.matches(".*@[19cghknrstvz]")) {
-							tavu = tavu.replaceAll("@.*", "");
+						if (tavu.equals("x")) {
+							System.out.print("xx");
 						}
-						if (tavu.matches(".*~[abcdefptyv][1234dgpt]?p?")) {
-							tavu = tavu.replaceAll("~.*", "");
-						}
-// All numbers to one
-						if (tavu.matches("n[1-90][1-90]*") || tavu.matches("[1-90][1-90]*")) {
-							tavu = "n01";
-						}
-						
-						if (tavu.equals("1/2(iku)") || tavu.equals("1/4(iku)")) {
-							tavu = "";
-						}
-						
-						tavu = tavu.replaceAll("[\\(\\)]", "");
-
-						if (cuneiMap.containsKey(tavu)) {
-							System.out.print(cuneiMap.get(tavu));
-						}
-						else if ((tavu.contains("×") || tavu.contains(".")) && !tavu.contains("&")) {
-							tavu = tavu.replaceAll("[\\.]", "×");
-							String[] alatavut = tavu.split("×");
-							for (String alatavu: alatavut) {
-								if (cuneiMap.containsKey(alatavu)) {
-									System.out.print(cuneiMap.get(alatavu));
-								}
-							}
-						}
-						else if (tavu.equals("€") || tavu.equals("o")) {
-							System.out.print("  ");
+						else if (tavu.equals("å")) {
+							System.out.print("åå");
 						}
 						else {
-//							System.out.print(tavu);
+	// After the characters @ and ~ there is some annotation which should no affect cuneifying, so we just remove it.
+							if (tavu.matches(".*@[19cghknrstvz]")) {
+								tavu = tavu.replaceAll("@.*", "");
+							}
+							if (tavu.matches(".*~[abcdefptyv][1234dgpt]?p?")) {
+								tavu = tavu.replaceAll("~.*", "");
+							}
+	// All numbers to one
+							if (tavu.matches("n[1-90][1-90]*") || tavu.matches("[1-90][1-90]*")) {
+								tavu = "n01";
+							}
+							
+							if (tavu.equals("1/2(iku)") || tavu.equals("1/4(iku)")) {
+								tavu = "";
+							}
+							
+							tavu = tavu.replaceAll("[\\(\\)]", "");
+							 
+							if (cuneiMap.containsKey(tavu)) {
+								System.out.print(cuneiMap.get(tavu));
+							}
+							else if ((tavu.contains("×") || tavu.contains(".")) && !tavu.contains("&")) {
+								tavu = tavu.replaceAll("[\\.]", "×");
+								String[] alatavut = tavu.split("×");
+								for (String alatavu: alatavut) {
+									if (cuneiMap.containsKey(alatavu)) {
+										System.out.print(cuneiMap.get(alatavu));
+									}
+								}
+							}
+							else if (tavu.equals("€") || tavu.equals("o")) {
+								System.out.print("  ");
+							}
+							else {
+	//							System.out.print(tavu);
+							}
 						}
+						
 					}
 				}
 				System.out.print("\n");
