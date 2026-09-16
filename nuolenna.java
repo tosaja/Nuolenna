@@ -33,6 +33,7 @@ class nuolenna {
 	private static BufferedWriter writer = null;
 	
 	private static TreeMap<String,String> cuneiMap = new TreeMap<String,String>();
+    private static boolean unifyNumbers = false;
 
     public static void main(String[] args) throws Exception {
         File classDir = new File(nuolenna.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -40,7 +41,25 @@ class nuolenna {
         
         loadindictionary(file);
 
-		File file2 = new File(args[0]);
+        String inputPath = null;
+        
+        for (String arg : args) {
+            if (arg.equals("-un")) {
+                unifyNumbers = true;
+            } else if (arg.startsWith("-")) {
+                System.err.println("Unknown option: " + arg);
+                System.exit(1);
+            } else {
+                inputPath = arg;
+            }
+        }
+        
+        if (inputPath == null) {
+            System.err.println("Usage: java nuolenna [-un] inputfile");
+            System.exit(1);
+        }
+        
+        File file2 = new File(inputPath);
         
         writer = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
         try {
@@ -77,7 +96,12 @@ class nuolenna {
         String cuneiform = "";
         String[] sanat = transliteration.split(" ");
         for (String sana : sanat) {
-            if (sana.matches("[0-9]+/[0-9]+\\(.*\\)") && cuneiMap.containsKey(sana)) {
+            //if (sana.matches("[0-9]+/[0-9]+\\(.*\\)") && cuneiMap.containsKey(sana)) {
+            
+            boolean fraction = sana.matches("[0-9]+/[0-9]+\\(.*\\)");
+            boolean number = !unifyNumbers && sana.matches("[0-9]+\\(.*\\)");
+            
+            if ((fraction || number) && cuneiMap.containsKey(sana)) {
                 cuneiform = cuneiform + cuneiMap.get(sana);
                 continue;
             }
@@ -182,7 +206,7 @@ class nuolenna {
                         tavu = tavu.replaceAll("~.*", "");
                     }
 // All numbers to one
-                    if (tavu.matches("n[1-90][1-90]*") || tavu.matches("[1-90][1-90]*")) {
+                    if (unifyNumbers && (tavu.matches("n[1-90][1-90]*") || tavu.matches("[1-90][1-90]*"))) {
                         tavu = "n01";
                     }
 
