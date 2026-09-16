@@ -33,11 +33,14 @@ class nuolenna {
 	
 	private static TreeMap<String,String> cuneiMap = new TreeMap<String,String>();
 
-	public static void main(String[] args) {
-		
-		File file = new File("sign_list.txt");
-				
-		loadindictionary(file);
+	//public static void main(String[] args) {
+		//File file = new File("sign_list.txt");
+		//loadindictionary(file);
+    public static void main(String[] args) throws Exception {
+        File classDir = new File(nuolenna.class.getProtectionDomain().getCodeSource().getLocation().toURI());
+        File file = new File(classDir, "sign_list.txt");
+        
+        loadindictionary(file);
 
 		File file2 = new File(args[0]);
 		
