@@ -1,7 +1,10 @@
 /*
     nuolenna.java converts transliterated cuneiform text into cuneiform
     Copyright (C) 2018 Tommi Jauhiainen
-	Copyright (C) 2024 University of Helsinki
+	Copyright (C) 2026 University of Helsinki
+ 
+    Claude and Mistral have been used as assistants in analyzing code and suggesting fixes and optimizations. 100% of code manually verified.
+
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU Affero General Public License as published by
