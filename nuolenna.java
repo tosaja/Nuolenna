@@ -26,6 +26,7 @@
 
 import java.util.*;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 class nuolenna {
 
@@ -33,9 +34,6 @@ class nuolenna {
 	
 	private static TreeMap<String,String> cuneiMap = new TreeMap<String,String>();
 
-	//public static void main(String[] args) {
-		//File file = new File("sign_list.txt");
-		//loadindictionary(file);
     public static void main(String[] args) throws Exception {
         File classDir = new File(nuolenna.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         File file = new File(classDir, "sign_list.txt");
@@ -43,19 +41,24 @@ class nuolenna {
         loadindictionary(file);
 
 		File file2 = new File(args[0]);
-		
-		muutanuoliksi(file2);
+        
+        writer = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
+        try {
+            muutanuoliksi(file2);
+        } finally {
+            writer.flush();
+        }
 	}
 	
 	private static void muutanuoliksi(File file) {
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new FileReader(file));
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
 			
 			String line = "";
 			while ((line = reader.readLine()) != null) {
 // Logograms are written in capitals, but the signs are the same
-				line = line.toLowerCase();
+                line = line.toLowerCase(Locale.ROOT);
 				
 				
 				String[] sanat = line.split(" ");
@@ -146,10 +149,10 @@ class nuolenna {
 					String[] tavut = sana.split(" ");
 					for (String tavu : tavut) {
 						if (tavu.equals("x")) {
-							System.out.print("xx");
+                            writer.write("xx");
 						}
 						else if (tavu.equals("å")) {
-							System.out.print("åå");
+                            writer.write("åå");
 						}
 						else {
 	// After the characters @ and ~ there is some annotation which should no affect cuneifying, so we just remove it.
@@ -171,19 +174,19 @@ class nuolenna {
 							tavu = tavu.replaceAll("[\\(\\)]", "");
 							 
 							if (cuneiMap.containsKey(tavu)) {
-								System.out.print(cuneiMap.get(tavu));
+                                writer.write(cuneiMap.get(tavu));
 							}
 							else if ((tavu.contains("×") || tavu.contains(".")) && !tavu.contains("&")) {
 								tavu = tavu.replaceAll("[\\.]", "×");
 								String[] alatavut = tavu.split("×");
 								for (String alatavu: alatavut) {
 									if (cuneiMap.containsKey(alatavu)) {
-										System.out.print(cuneiMap.get(alatavu));
+                                        writer.write(cuneiMap.get(alatavu));
 									}
 								}
 							}
 							else if (tavu.equals("€") || tavu.equals("o")) {
-								System.out.print("  ");
+                                writer.write("  ");
 							}
 							else {
 	//							System.out.print(tavu);
@@ -192,7 +195,7 @@ class nuolenna {
 						
 					}
 				}
-				System.out.print("\n");
+                writer.write("\n");
 			}
 		reader.close();
 		} catch (FileNotFoundException e) {
@@ -206,13 +209,14 @@ class nuolenna {
 		
 		BufferedReader reader = null;
 		try {
-			reader = new BufferedReader(new FileReader(file));
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
 			
 			String line = "";
 			
 			while ((line = reader.readLine()) != null) {
 				String translitteraatio = line.replaceAll("\t.*", "");
-				translitteraatio = translitteraatio.toLowerCase();
+				//translitteraatio = translitteraatio.toLowerCase();
+                translitteraatio = translitteraatio.toLowerCase(Locale.ROOT);
 				String nuolenpaa = line.replaceAll(".*\t", "");
 // We'll change all combination signs to just signs following each other
 				nuolenpaa = nuolenpaa.replaceAll("x", "");
