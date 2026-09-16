@@ -77,6 +77,11 @@ class nuolenna {
         String cuneiform = "";
         String[] sanat = transliteration.split(" ");
         for (String sana : sanat) {
+            if (sana.matches("[0-9]+/[0-9]+\\(.*\\)") && cuneiMap.containsKey(sana)) {
+                cuneiform = cuneiform + cuneiMap.get(sana);
+                continue;
+            }
+            
 // REPETITION '(' GRAPHEME ')'
             if (sana.matches("^[1-90][1-90]*\\(.*\\)$")) {
                 String merkki = sana.replaceAll("^[1-90][1-90]*\\(", "");
@@ -180,11 +185,7 @@ class nuolenna {
                     if (tavu.matches("n[1-90][1-90]*") || tavu.matches("[1-90][1-90]*")) {
                         tavu = "n01";
                     }
-                    
-                    if (tavu.equals("1/2(iku)") || tavu.equals("1/4(iku)")) {
-                        tavu = "";
-                    }
-                    
+
                     tavu = tavu.replaceAll("[\\(\\)]", "");
                      
                     if (cuneiMap.containsKey(tavu)) {
