@@ -34,6 +34,9 @@ class nuolenna {
 	
 	private static TreeMap<String,String> cuneiMap = new TreeMap<String,String>();
     private static boolean unifyNumbers = false;
+    private static boolean old1 = false;
+    private static boolean showUnknown = false;
+    private static BufferedWriter unknownWriter = null;
 
     public static void main(String[] args) throws Exception {
         File classDir = new File(nuolenna.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -46,6 +49,10 @@ class nuolenna {
         for (String arg : args) {
             if (arg.equals("-un")) {
                 unifyNumbers = true;
+            } else if (arg.equals("-old1")) {
+                old1 = true;
+            } else if (arg.equals("-unknown")) {
+                showUnknown = true;
             } else if (arg.startsWith("-")) {
                 System.err.println("Unknown option: " + arg);
                 System.exit(1);
@@ -55,13 +62,15 @@ class nuolenna {
         }
         
         if (inputPath == null) {
-            System.err.println("Usage: java nuolenna [-un] inputfile");
+            System.err.println("Usage: java nuolenna [-un] [-old1] [-unknown] inputfile");
             System.exit(1);
         }
         
         File file2 = new File(inputPath);
         
         writer = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
+        unknownWriter = new BufferedWriter(new OutputStreamWriter(System.err, StandardCharsets.UTF_8));
+        
         try {
             muutanuoliksi(file2);
         } finally {
@@ -92,11 +101,20 @@ class nuolenna {
 		}
 	}
     
-    private static String makeCuneiform(String transliteration) {
+    private static void reportUnknown(String tavu, String sana) throws IOException {
+        if (showUnknown) {
+            unknownWriter.write(tavu + "\t" + sana + "\n");
+        }
+    }
+    
+    //private static String makeCuneiform(String transliteration) {
+    private static String makeCuneiform(String transliteration) throws IOException {
         String cuneiform = "";
         String[] sanat = transliteration.split(" ");
         for (String sana : sanat) {
             //if (sana.matches("[0-9]+/[0-9]+\\(.*\\)") && cuneiMap.containsKey(sana)) {
+            
+            String alkuperainen = sana;
             
             boolean fraction = sana.matches("[0-9]+/[0-9]+\\(.*\\)");
             boolean number = !unifyNumbers && sana.matches("[0-9]+\\(.*\\)");
@@ -191,6 +209,9 @@ class nuolenna {
 
             String[] tavut = sana.split(" ");
             for (String tavu : tavut) {
+                if (tavu.isEmpty()) {
+                    continue;
+                }
                 if (tavu.equals("x")) {
                     cuneiform = cuneiform + ("xx");
                 }
@@ -221,18 +242,35 @@ class nuolenna {
                         for (String alatavu: alatavut) {
                             if (cuneiMap.containsKey(alatavu)) {
                                 cuneiform = cuneiform + cuneiMap.get(alatavu);
+                            //} else if (!old1 && !alatavu.isEmpty()) {
+                            } else if (!alatavu.isEmpty()) {
+                                reportUnknown(alatavu, alkuperainen);
+                                if (!old1) {
+                                    cuneiform = cuneiform + "_";
+                                }
                             }
                         }
                     }
                     else if (tavu.equals("€") || tavu.equals("o")) {
                         cuneiform = cuneiform + "  ";
+                    } else {
+                        reportUnknown(tavu, alkuperainen);
+                        if (!old1) {
+                            cuneiform = cuneiform + "_";
+                        }
                     }
-                    else {
+//                    } else if (!old1) {
+//                        cuneiform = cuneiform + "_";
+//                    }
+//                    else {
 //                            System.out.print(tavu);
-                    }
+//                    }
                 }
                 
             }
+        }
+        if (!old1) {
+            cuneiform = cuneiform.replaceAll("[^\\x{12000}-\\x{1268F}]+", "_");
         }
         return cuneiform;
     }
