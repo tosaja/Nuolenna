@@ -116,6 +116,13 @@ class nuolenna {
             
             String alkuperainen = sana;
             
+            // N-numerals may be written with subscript digits, e.g. 1(n₁₄)
+            if (sana.matches("[0-9]+\\(n[₀-₉]+.*\\)")) {
+                for (char c = '₀'; c <= '₉'; c++) {
+                    sana = sana.replace(c, (char) ('0' + (c - '₀')));
+                }
+            }
+            
             boolean fraction = sana.matches("[0-9]+/[0-9]+\\(.*\\)");
             boolean number = !unifyNumbers && sana.matches("[0-9]+\\(.*\\)");
             
