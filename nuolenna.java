@@ -25,6 +25,7 @@
 */
 
 import java.util.*;
+import java.util.regex.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -37,6 +38,9 @@ class nuolenna {
     private static boolean old1 = false;
     private static boolean showUnknown = false;
     private static BufferedWriter unknownWriter = null;
+    private static boolean cdli = false;
+    private static final Pattern INDEKSI = Pattern.compile("(?<![~\\p{L}])(\\p{L}+)([0-9]+)");
+    private static final Set<String> LISTANIMET = new HashSet<>(Arrays.asList("n", "m", "kwu", "lak", "zatu"));
 
     public static void main(String[] args) throws Exception {
         File classDir = new File(nuolenna.class.getProtectionDomain().getCodeSource().getLocation().toURI());
@@ -53,6 +57,8 @@ class nuolenna {
                 old1 = true;
             } else if (arg.equals("-unknown")) {
                 showUnknown = true;
+            } else if (arg.equals("-cdli")) {
+                cdli = true;
             } else if (arg.startsWith("-")) {
                 System.err.println("Unknown option: " + arg);
                 System.exit(1);
@@ -62,7 +68,7 @@ class nuolenna {
         }
         
         if (inputPath == null) {
-            System.err.println("Usage: java nuolenna [-un] [-old1] [-unknown] inputfile");
+            System.err.println("Usage: java nuolenna [-un] [-old1] [-unknown] [-cdli] inputfile");
             System.exit(1);
         }
         
@@ -72,9 +78,14 @@ class nuolenna {
         unknownWriter = new BufferedWriter(new OutputStreamWriter(System.err, StandardCharsets.UTF_8));
         
         try {
-            muutanuoliksi(file2);
+            if (cdli) {
+                muutaCdli(file2);
+            } else {
+                muutanuoliksi(file2);
+            }
         } finally {
             writer.flush();
+            unknownWriter.flush();
         }
 	}
 	
@@ -101,10 +112,65 @@ class nuolenna {
 		}
 	}
     
+    private static void muutaCdli(File file) throws IOException {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+            String id = null;
+            StringBuilder teksti = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("&")) {
+                    kirjoitaCdliTeksti(id, teksti);
+                    id = line.substring(1).split("[ =]")[0];
+                    teksti.setLength(0);
+                } else if (line.matches("\\S+\\.\\s.*")) {
+                    if (teksti.length() > 0) {
+                        teksti.append(" å ");
+                    }
+                    teksti.append(line.replaceFirst("^\\S+\\.\\s+", ""));
+                }
+            }
+            kirjoitaCdliTeksti(id, teksti);
+        }
+    }
+
+    private static void kirjoitaCdliTeksti(String id, StringBuilder teksti) throws IOException {
+        if (id != null) {
+            writer.write(id + "\t" + makeCuneiform(muunnaCatf(teksti.toString().toLowerCase(Locale.ROOT))) + "\n");
+        }
+    }
+    
     private static void reportUnknown(String tavu, String sana) throws IOException {
         if (showUnknown) {
             unknownWriter.write(tavu + "\t" + sana + "\n");
         }
+    }
+    
+    private static String muunnaCatf(String s) {
+        s = s.replace("sz", "š").replace("s,", "ṣ").replace("t,", "ṭ");
+        s = s.replaceAll("(?<=\\p{L})x\\(", "ₓ(");
+        // Index numbers after a sign value become subscripts (ban2 -> ban₂),
+        // but numbered sign names such as N01 or KWU147 keep their digits
+        Matcher m = INDEKSI.matcher(s);
+        StringBuilder tulos = new StringBuilder();
+        while (m.find()) {
+            String kirjaimet = m.group(1);
+            String numerot = m.group(2);
+            if (LISTANIMET.contains(kirjaimet)) {
+                m.appendReplacement(tulos, kirjaimet + numerot);
+            } else {
+                m.appendReplacement(tulos, kirjaimet + alaindeksi(numerot));
+            }
+        }
+        m.appendTail(tulos);
+        return tulos.toString();
+    }
+
+    private static String alaindeksi(String numerot) {
+        StringBuilder sb = new StringBuilder();
+        for (char c : numerot.toCharArray()) {
+            sb.append((char) ('₀' + (c - '0')));
+        }
+        return sb.toString();
     }
     
     //private static String makeCuneiform(String transliteration) {
